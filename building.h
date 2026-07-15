@@ -2,10 +2,11 @@
 #define BUILDING_H
 
 #include <GL/freeglut.h>
+#include <cmath>
 
-// =============================================
-// KERANGKA BANGUNAN — TEKSTUR BETON
-// =============================================
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
 static float bldgLenX  = 60.0f;
 static float bldgLenZ  = 30.0f;
@@ -145,14 +146,12 @@ void drawBuilding() {
 
     // ==========================================
     // BIDANG MIRING DI SISI PENDEK (x = ±halfX)
-    // Permukaan miring dari tepi ke tengah, di atas pilar penyangga
+    // Kanopi miring dari tepi (rendah) ke tengah (tinggi), disangga pilar
     // ==========================================
-    float slopeWidth  = halfZ * 0.85f;  // lebar bidang miring (sebagian besar lebar)
-    float slopeLowY   = 3.0f;           // ketinggian ujung bawah
-    float slopeHighY  = 8.0f;           // ketinggian ujung atas (toward center)
-    float slopeThick  = 0.4f;           // ketebalan bidang miring
-    int   slopeSegsX  = 6;              // segmen sepanjang X (ketebalan)
-    int   slopeSegsZ  = 10;             // segmen sepanjang Z (lebar)
+    float slopeWidth  = halfZ * 0.85f;  // lebar kanopi (sebagian besar lebar)
+    float slopeLowY   = 3.0f;           // ketinggian tepi luar (dekat fasad)
+    float slopeHighY  = 8.0f;           // ketinggian tepi dalam (menjorok ke tengah)
+    float slopeThick  = 0.4f;           // ketebalan slab kanopi
     int   numPillars  = 5;              // jumlah pilar penyangga per sisi
 
     for (int side = 0; side < 2; side++) {
@@ -160,41 +159,13 @@ void drawBuilding() {
         float dirX  = (side == 0) ? 1.0f : -1.0f;  // arah ke tengah
         float xInset = 6.0f * dirX;  // ujung atas menjorok ke dalam
 
-        // --- 1. Permukaan miring (solid) ---
-        glColor3f(0.55f, 0.55f, 0.57f);
-        for (int iz = 0; iz < slopeSegsZ; iz++) {
-            float t0 = (float)iz / slopeSegsZ;
-            float t1 = (float)(iz + 1) / slopeSegsZ;
-            float z0 = -slopeWidth + 2.0f * slopeWidth * t0;
-            float z1 = -slopeWidth + 2.0f * slopeWidth * t1;
-            float yLow0  = slopeLowY + (slopeHighY - slopeLowY) * t0;
-            float yLow1  = slopeLowY + (slopeHighY - slopeLowY) * t1;
-            float yHigh0 = yLow0 + slopeThick;
-            float yHigh1 = yLow1 + slopeThick;
-            float xLow0  = baseX;
-            float xHigh0 = baseX + xInset * t0;
-            float xHigh1 = baseX + xInset * t1;
-
-            glBegin(GL_QUADS);
-            // sisi atas (permukaan miring)
-            glVertex3f(xHigh0, yHigh0, z0);
-            glVertex3f(xHigh1, yHigh1, z0);
-            glVertex3f(xHigh1, yHigh1, z1);
-            glVertex3f(xHigh0, yHigh0, z1);
-            // sisi bawah
-            glVertex3f(xLow0, yLow0, z0);
-            glVertex3f(xLow0 + xInset * t1 / slopeSegsZ * slopeSegsZ,
-                       yLow1, z0);
-            glEnd();
-        }
-
-        // Bidang miring — satu quad besar di sisi atas
+        // --- 1. Permukaan bawah kanopi (sisi luar, tanpa ketebalan) ---
         glColor3f(0.58f, 0.58f, 0.60f);
         glBegin(GL_QUADS);
-            glVertex3f(baseX,                  slopeLowY,  -slopeWidth);
-            glVertex3f(baseX + xInset,         slopeHighY, -slopeWidth);
-            glVertex3f(baseX + xInset,         slopeHighY,  slopeWidth);
-            glVertex3f(baseX,                  slopeLowY,   slopeWidth);
+            glVertex3f(baseX,          slopeLowY,  -slopeWidth);
+            glVertex3f(baseX + xInset, slopeHighY, -slopeWidth);
+            glVertex3f(baseX + xInset, slopeHighY,  slopeWidth);
+            glVertex3f(baseX,          slopeLowY,   slopeWidth);
         glEnd();
 
         // Sisi depan miring (tepi Z = -slopeWidth)
@@ -214,7 +185,7 @@ void drawBuilding() {
             glVertex3f(baseX,               slopeLowY + slopeThick,  slopeWidth);
         glEnd();
 
-        // Sisi atas permukaan miring
+        // Permukaan atas kanopi (sisi dalam, dengan ketebalan)
         glColor3f(0.60f, 0.60f, 0.62f);
         glBegin(GL_QUADS);
             glVertex3f(baseX,               slopeLowY + slopeThick,  -slopeWidth);
@@ -223,17 +194,39 @@ void drawBuilding() {
             glVertex3f(baseX,               slopeLowY + slopeThick,   slopeWidth);
         glEnd();
 
-        // --- 2. Pilar penyangga di bawah bidang miring ---
+        // Tutup tepi luar (x = baseX) — merapatkan slab agar tidak ada celah terbuka
+        glColor3f(0.52f, 0.52f, 0.54f);
+        glBegin(GL_QUADS);
+            glVertex3f(baseX, slopeLowY,               -slopeWidth);
+            glVertex3f(baseX, slopeLowY,                slopeWidth);
+            glVertex3f(baseX, slopeLowY + slopeThick,   slopeWidth);
+            glVertex3f(baseX, slopeLowY + slopeThick,  -slopeWidth);
+        glEnd();
+
+        // Tutup tepi dalam (x = baseX + xInset)
+        glBegin(GL_QUADS);
+            glVertex3f(baseX + xInset, slopeHighY,               -slopeWidth);
+            glVertex3f(baseX + xInset, slopeHighY,                slopeWidth);
+            glVertex3f(baseX + xInset, slopeHighY + slopeThick,   slopeWidth);
+            glVertex3f(baseX + xInset, slopeHighY + slopeThick,  -slopeWidth);
+        glEnd();
+
+        // --- 2. Pilar penyangga di bawah kanopi ---
         glColor3f(0.38f, 0.38f, 0.40f);
         float pillarThick = 0.45f;
 
         for (int p = 0; p < numPillars; p++) {
             float tz = -slopeWidth + 2.0f * slopeWidth * (float)p / (numPillars - 1);
-            float tFrac = (float)p / (numPillars - 1);
-            float pillarTopY = slopeLowY + (slopeHighY - slopeLowY) * tFrac;
+
+            // Posisi pilar sepanjang X (0 = tepi luar, 1 = tepi dalam kanopi)
+            float uX = 0.5f * (float)p / (numPillars - 1);
+            float pillarX = baseX + xInset * uX;
+
+            // Tinggi kanopi TEPAT di atas pillarX (dulu memakai fraksi Z, jadi
+            // tidak match — pilar bisa menembus atau menggantung di bawah kanopi)
+            float pillarTopY = slopeLowY + (slopeHighY - slopeLowY) * uX;
             float pillarBotY = 0.06f;  // di atas lantai hijau
             float pillarH = pillarTopY - pillarBotY;
-            float pillarX = baseX + xInset * tFrac * 0.5f;
 
             glPushMatrix();
             glTranslatef(pillarX, pillarBotY + pillarH / 2.0f, tz);
@@ -295,8 +288,6 @@ void drawBuilding() {
                 float z0 = zStart + (zEnd - zStart) * t0;
                 float z1 = zStart + (zEnd - zStart) * t1;
 
-                float f0 = 1.0f - fabsf(t0 * 2.0f - 1.0f);
-                float f1 = 1.0f - fabsf(t1 * 2.0f - 1.0f);
                 float y0 = roofBaseY + roofPeak * t0 + arcBulge * sinf(M_PI * t0);
                 float y1 = roofBaseY + roofPeak * t1 + arcBulge * sinf(M_PI * t1);
 
@@ -373,7 +364,6 @@ void drawBuilding() {
     // --- 5. STRUTS (penyangga miring di bawah sisi atap) ---
     glColor3f(0.35f, 0.35f, 0.37f);
     float strutThick = 0.25f;
-    int   numStruts  = 5;
 
     for (int ix = 1; ix < numRafters; ix += 2) {
         float x = -halfX + ix * (bldgLenX / (numRafters - 1));

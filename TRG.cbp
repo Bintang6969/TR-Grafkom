@@ -48,6 +48,8 @@
 		<Unit filename="toilet.h" />
 		<Unit filename="road.h" />
 		<Unit filename="building.h" />
+		<Unit filename="players.h" />
+		<Unit filename="obj_loader.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

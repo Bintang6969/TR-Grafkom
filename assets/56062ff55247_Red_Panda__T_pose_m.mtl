@@ -1,0 +1,11 @@
+# Red Panda MTL
+# Updated with correct texture path
+
+newmtl base_material
+Ka 1.0 1.0 1.0
+Kd 1.0 1.0 1.0
+Ks 0.5 0.5 0.5
+Ns 10.0
+d 1.0
+illum 2
+map_Kd panda_albedo.jpg

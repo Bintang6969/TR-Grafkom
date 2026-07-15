@@ -14,6 +14,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include "toilet.h"
+#include "obj_loader.h"
 
 using namespace std;
 
@@ -90,6 +91,7 @@ vector<Pt> buildBoundary(float R, float Lstraight)
 
 #include "road.h"
 #include "building.h"
+#include "players.h"
 
 // =========================================================
 // Rumput bermotif garis potong rumput (mowing stripes) di dalam lapangan persegi panjang
@@ -763,6 +765,7 @@ void display()
 
     drawGround();
     drawField();
+    drawPlayers();
     drawTrack();
     // gawang diletakkan di pinggir lapangan (ujung lengkung), pas di dekat garis merah lintasan
     drawGoal( goalX, 0.0f,  1.0f); // jaring menjorok ke arah +X (menjauhi tengah)
@@ -924,6 +927,7 @@ void init()
         stbi_image_free(d2);
     }
     initBuilding(bldgTexture);
+    initPlayerModels();
 }
 
 int main(int argc, char** argv)

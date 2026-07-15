@@ -5,13 +5,6 @@
 #include <vector>
 #include <cmath>
 
-// =============================================
-// JALAN RAYA OVAL + TROTOAR (di luar stadion)
-// =============================================
-// Tiroar dalam : R = 81 → 85  (lebar 4m)
-// Jalan aspal  : R = 85 → 97  (lebar 12m, 2 lajur)
-// Tiroar luar  : R = 97 → 101 (lebar 4m)
-
 static float roadInnerSidewalkInner = 81.0f;
 static float roadInnerSidewalkOuter = 85.0f;
 static float roadOuterSidewalkInner = 97.0f;
